@@ -10,7 +10,7 @@ from utils.json_utils import load_json
 from volunteer_db_broker import VolunteerDatabaseBroker
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
-dbConnectionStrings = load_json(current_dir, "dbConnectionStrings.json")
+dbConnectionStrings = load_json(current_dir, "dev\dbConnectionStrings.json")
 app = FastAPI()
 
 class DatabaseConnectionDependency:
