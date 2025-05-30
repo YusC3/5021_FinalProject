@@ -456,4 +456,14 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
+# SHOWING THE LIST OF ALL VOLUNTEERS IN THE EVENT GIVEN THE EVENTID
+DROP PROCEDURE IF EXISTS ShowVolunteersAtEvent;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `ShowVolunteersAtEvent`(IN event_id INT)
+  BEGIN
+  SELECT 'Showing All Volunteers for Event' AS message;
+  SELECT * FROM volunteer JOIN ticket ON ticket.Event_EventID = event_id;
+  END ;;
+DELIMITER ;
+
 -- Dump completed on 2025-05-16 19:55:51
