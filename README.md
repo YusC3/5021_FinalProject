@@ -1,10 +1,14 @@
-If you don't have these libraries (FastAPI or mysql) download them here:
+# Final Project - 5021 (Databases): Volunteer DB and API
+### Date: 06/02/2025
+### Engineers: Yusuf Corr, Peter Hsu, Zoya Soy
+
+## Introduction: 
+This is a final project for 5021 (Databases) at Seattle University, SPRING 2025. We build an inital DB (database) and API using python, FastAPI, and MySQL.
+
+This docuemnt will explain how to set up and run this project from a local machine. If you don't have these libraries (FastAPI or mysql) download them here:
   - https://fastapi.tiangolo.com/
   - https://pypi.org/project/mysql-connector-python/
 
-# Introduction: 
-
-This docuemnt will explain how to set up and run this project from a local machine. 
 
 ## DB Initalization and connection:
 
