@@ -17,7 +17,6 @@ class VolunteerDatabaseBroker:
         print("worked!") 
         json_data = format_sql_rows_to_json(cursor)
         return json_data
-
     
     def read_all_vendors(self, country='USA'):
         json_data = {}
@@ -48,7 +47,7 @@ class VolunteerDatabaseBroker:
             self.connection.close()
         return json_data
     
-    def TicketInform_Ticketcount(self, EventID = ""):
+    def TicketInform_Attendance_Percentage(self, EventID = ""):
         json_data = {}
 
         query = """  Select (TA.TotalAttendance/TC.TicketCount) as persentage
@@ -73,8 +72,8 @@ class VolunteerDatabaseBroker:
             print("parameter error")
             return
         
-        query = """  Select * from ticket 
-                     left join volunteer on VolunteerID = Volunteer_VolunteerID
+        query = """  Select * from ticket T
+                     left join volunteer V on T.VolunteerID = V.VolunteerID
                      where Event_EventID = %s; """
    
         try:
@@ -93,11 +92,14 @@ class VolunteerDatabaseBroker:
             print("parameter error")
             return
         
-        query = """ update ticket set Attendance = 1 where TicketID = %s and Event_EventID = %s; """
+        query = """ update ticket 
+                    set Attendance = 1 
+                    where TicketID = %s and EventID = %s; """
  
         try:
             db_cursor = self.connection.cursor()
             json_data = self.execute_query_fetchall(query, db_cursor, (TicketID, EventID,))
+            self.connection.commit();
             db_cursor.close()
         except mysql.connector.errors.Error as err:
             json_data = {err: err.msg}
@@ -111,11 +113,84 @@ class VolunteerDatabaseBroker:
             print("parameter error")
             return
         
-        query = " update organization set Name = %s, NPOTypeID = %s, Email = %s, PhoneNumber = %s, AreaID = %s, Street = %s where OrgID = %s; "
+        query = """ update organization 
+                    set Name = %s, 
+                        NPOTypeID = %s, 
+                        Email = %s, 
+                        PhoneNumber = %s, 
+                        AreaID = %s, 
+                        Street = %s 
+                    where OrgID = %s; """
  
         try:
             db_cursor = self.connection.cursor()
             json_data = self.execute_query_fetchall(query, db_cursor, (OName_, NPOTypeID, Email_, PhoneNumber, AreaID, Street, OrgID,))
+            self.connection.commit();
+            db_cursor.close()
+        except mysql.connector.errors.Error as err:
+            json_data = {err: err.msg}
+        finally:
+            self.connection.close()
+        return json_data
+    
+    def UpdateEvent(self, EventID = "", EventType = "", EventTime = "", OrgID = "", AreaID = "", Street = ""):
+        json_data = {}
+        if (EventID == "" or EventType == "" or EventTime == "" or OrgID == "" or AreaID == ""):
+            print("parameter error")
+            return
+        
+        query = """ update events 
+                    set EventType = %s, 
+                        EventTime = %s, 
+                        OrgID = %s, 
+                        AreaID = %s, 
+                        Street = %s 
+                    where EventID = %s; """
+ 
+        try:
+            db_cursor = self.connection.cursor()
+            json_data = self.execute_query_fetchall(query, db_cursor, (EventType, EventTime, OrgID, AreaID, Street, EventID,))
+            self.connection.commit();
+            db_cursor.close()
+        except mysql.connector.errors.Error as err:
+            json_data = {err: err.msg}
+        finally:
+            self.connection.close()
+        return json_data
+    
+    def InsertEvent(self, EventType = "", EventTime = "", OrgID = "", AreaID = "", Street = ""):
+        json_data = {}
+        if (EventType == "" or EventTime == "" or OrgID == "" or AreaID == ""):
+            print("parameter error")
+            return
+        
+        query = """ insert into events (EventType, EventTime, OrgID, AreaID, Street)
+                    values (%s, %s, %s, %s, %s); """
+ 
+        try:
+            db_cursor = self.connection.cursor()
+            json_data = self.execute_query_fetchall(query, db_cursor, (EventType, EventTime, OrgID, AreaID, Street,))
+            self.connection.commit();
+            db_cursor.close()
+        except mysql.connector.errors.Error as err:
+            json_data = {err: err.msg}
+        finally:
+            self.connection.close()
+        return json_data
+    
+    def InsertTickets(self, VolunteerID = "", EventID = ""):
+        json_data = {}
+        if (VolunteerID == "" or EventID == ""):
+            print("parameter error")
+            return
+        
+        query = """ insert into ticket (VolunteerID, EventID, Attendance)
+                    values (%s, %s, false); """
+ 
+        try:
+            db_cursor = self.connection.cursor()
+            json_data = self.execute_query_fetchall(query, db_cursor, (VolunteerID, EventID,))
+            self.connection.commit();
             db_cursor.close()
         except mysql.connector.errors.Error as err:
             json_data = {err: err.msg}

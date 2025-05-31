@@ -25,7 +25,7 @@ DROP TABLE IF EXISTS `area`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `area` (
-  `AreaID` int unsigned NOT NULL,
+  `AreaID` int unsigned NOT NULL AUTO_INCREMENT,
   `Country` varchar(50) NOT NULL,
   `State` varchar(80) NOT NULL,
   `City` varchar(80) NOT NULL,
@@ -118,7 +118,7 @@ DROP TABLE IF EXISTS `npotype`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `npotype` (
-  `NPOTypeID` int unsigned NOT NULL,
+  `NPOTypeID` int unsigned NOT NULL AUTO_INCREMENT,
   `Section` varchar(45) NOT NULL,
   `Profit` tinyint(1) NOT NULL,
   `Description` varchar(150) DEFAULT NULL,
@@ -145,7 +145,7 @@ DROP TABLE IF EXISTS `organization`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `organization` (
-  `OrgID` int unsigned NOT NULL,
+  `OrgID` int unsigned NOT NULL AUTO_INCREMENT,
   `Name` varchar(80) NOT NULL,
   `NPOTypeID` int unsigned NOT NULL,
   `Email` varchar(100) DEFAULT NULL,
@@ -179,15 +179,15 @@ DROP TABLE IF EXISTS `ticket`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `ticket` (
-  `TicketID` int unsigned NOT NULL,
-  `Volunteer_VolunteerID` int unsigned NOT NULL,
-  `Event_EventID` int unsigned NOT NULL,
+  `TicketID` int unsigned NOT NULL AUTO_INCREMENT,
+  `VolunteerID` int unsigned NOT NULL,
+  `EventID` int unsigned NOT NULL,
   `Attendance` tinyint NOT NULL,
-  PRIMARY KEY (`TicketID`,`Event_EventID`),
-  KEY `fk_Ticket_Volunteer1_idx` (`Volunteer_VolunteerID`),
-  KEY `fk_Ticket_Event1_idx` (`Event_EventID`),
-  CONSTRAINT `fk_Ticket_Event1` FOREIGN KEY (`Event_EventID`) REFERENCES `events` (`EventID`),
-  CONSTRAINT `fk_Ticket_Volunteer1` FOREIGN KEY (`Volunteer_VolunteerID`) REFERENCES `volunteer` (`VolunteerID`)
+  PRIMARY KEY (`TicketID`,`EventID`),
+  KEY `fk_Ticket_Volunteer1_idx` (`VolunteerID`),
+  KEY `fk_Ticket_Event1_idx` (`EventID`),
+  CONSTRAINT `fk_Ticket_Event1` FOREIGN KEY (`EventID`) REFERENCES `events` (`EventID`),
+  CONSTRAINT `fk_Ticket_Volunteer1` FOREIGN KEY (`VolunteerID`) REFERENCES `volunteer` (`VolunteerID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
