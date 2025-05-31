@@ -7,11 +7,13 @@ from typing import Annotated
 from fastapi import Depends, FastAPI
 
 from utils.json_utils import load_json
-from volunteer_db_broker import VolunteerDatabaseBroker
+from db_connector import DBConnector
+from volunteer_db_service import VolunteerDatabaseService
+from data_models import Event
 
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
-dbConnectionStrings = load_json(current_dir, "dev\dbConnectionStrings.json")
+dbConnectionStrings = load_json(current_dir, "..\dev\dbConnectionStrings.json")
 app = FastAPI()
 
 class DatabaseConnectionDependency:
@@ -22,8 +24,8 @@ class DatabaseConnectionDependency:
             host = dbConnectionStrings["host"],
             database = dbConnectionStrings["database"]
         )
-
-        self.database_broker = VolunteerDatabaseBroker(connection)
+        db_connector = DBConnector(connection)
+        self.database_broker = VolunteerDatabaseService(db_connector)
 
 @app.get("/")
 def read_root():
@@ -78,12 +80,14 @@ def Update_Event(
     json_data = database_dependency.database_broker.modify_event_for_eventid("1", "Food Distribution", "2021-05-24 11:47:00", "1", "100", "Cherry St")
     return json_data
 
-@app.get("/AddEvents")
-def Insert_Event(
-    database_dependency: 
+@app.post("/events/", status_code=201)
+def create_event(
+    event: Event,
+    database_dependency:
         Annotated[DatabaseConnectionDependency, 
         Depends(DatabaseConnectionDependency)]):
-    json_data = database_dependency.database_broker.create_event("?????", "2021-05-24 11:47:00", "1", "100", "Cherry St")
+    event_id = database_dependency.database_broker.create_event(event)
+    json_data = database_dependency.database_broker.read_event_for_eventid(event_id)
     return json_data
 
 @app.get("/AddTickets")

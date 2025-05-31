@@ -1,12 +1,10 @@
-import mysql.connector
+from data_models import Event
+from db_connector import DBConnector
 
-from utils.json_utils import format_sql_rows_to_json, format_one_sql_row_to_json
+class VolunteerDatabaseService:
+    def __init__(self, db_Connector: DBConnector):
+        self.db_connector = db_Connector
 
-class VolunteerDatabaseBroker:
-    def __init__(self, connection):
-        self.connection = connection
-        return
-    
     def read_all_vendors(self):
         json_data = {}
 
@@ -26,7 +24,7 @@ class VolunteerDatabaseBroker:
                 JOIN vendortype vt ON vt.TypeID = v.TypeID
                 JOIN area a ON a.AreaID = v.AreaID"""
 
-        json_data = self.execute_select_query(query, fetchall=True)
+        json_data = self.db_connector.execute_select_query(query, fetchall=True)
         return json_data
     
     def read_ticket_attendance_percentage(self, EventID):
@@ -41,9 +39,18 @@ class VolunteerDatabaseBroker:
                 JOIN organization o ON o.OrgID = e.OrgID
                 WHERE t.EventID = %s;"""
 
-        json_data = self.execute_select_query(query, [EventID])
+        json_data = self.db_connector.execute_select_query(query, [EventID])
         return json_data
-            
+    
+    def read_event_for_eventid(self, EventID):
+        query = """
+                SELECT *
+                FROM events e
+                WHERE e.EventID = %s;"""
+
+        json_data = self.db_connector.execute_select_query(query, [EventID])
+        return json_data
+    
     def read_ticket_volunteerids(self, EventID = ""):
         if EventID == "":
             raise ValueError("Missing Event ID for query operation")
@@ -52,7 +59,7 @@ class VolunteerDatabaseBroker:
                      left join volunteer V on T.VolunteerID = V.VolunteerID
                      where Event_EventID = %s; """
    
-        json_data = self.execute_select_query(query, (EventID,))
+        json_data = self.db_connector.execute_select_query(query, (EventID,))
         return json_data
     
     def modify_ticket_inform_attendance(self, TicketID = "", EventID = ""):
@@ -63,7 +70,7 @@ class VolunteerDatabaseBroker:
                     set Attendance = 1 
                     where TicketID = %s and EventID = %s; """
  
-        json_data = self.execute_update_query(query, (TicketID, EventID,))
+        json_data = self.db_connector.execute_update_query(query, (TicketID, EventID,))
         return json_data
     
     def modify_organization_for_orid(self, OrgID = "", OName_ = "", NPOTypeID = "", Email_ = "", PhoneNumber = "", AreaID = "", Street = ""):
@@ -79,7 +86,7 @@ class VolunteerDatabaseBroker:
                         Street = %s 
                     where OrgID = %s; """
         
-        json_data = self.execute_update_query(query, (OName_, NPOTypeID, Email_, PhoneNumber, AreaID, Street, OrgID,))
+        json_data = self.db_connector.execute_update_query(query, (OName_, NPOTypeID, Email_, PhoneNumber, AreaID, Street, OrgID,))
         return json_data
     
     def modify_event_for_eventid(self, EventID = "", EventType = "", EventTime = "", OrgID = "", AreaID = "", Street = ""):
@@ -94,18 +101,17 @@ class VolunteerDatabaseBroker:
                         Street = %s 
                     where EventID = %s; """
  
-        json_data = self.execute_select_query(query, (EventType, EventTime, OrgID, AreaID, Street, EventID,))
+        json_data = self.db_connector.execute_update_query(query, (EventType, EventTime, OrgID, AreaID, Street, EventID,))
         return json_data
     
-    def create_event(self, EventType = "", EventTime = "", OrgID = "", AreaID = "", Street = ""):
-        if (EventType == "" or EventTime == "" or OrgID == "" or AreaID == ""):
-            raise ValueError("Missing one or more parameters for operation")
-        
+    def create_event(self, event:Event):
         query = """ insert into events (EventType, EventTime, OrgID, AreaID, Street)
                     values (%s, %s, %s, %s, %s); """
 
-        json_data = self.execute_select_query(query, (EventType, EventTime, OrgID, AreaID, Street,))
-        return json_data
+        row_id = self.db_connector.execute_insert_query(query, 
+            (event.event_type, event.event_time, event.org_id, event.area_id, event.street))
+        
+        return row_id
     
     def create_ticket_for_eventid(self, VolunteerID = "", EventID = ""):
         if (VolunteerID == "" or EventID == ""):
@@ -114,37 +120,5 @@ class VolunteerDatabaseBroker:
         query = """ insert into ticket (VolunteerID, EventID, Attendance)
                     values (%s, %s, false); """
  
-        json_data = self.execute_select_query(query, (VolunteerID, EventID,))
-        return json_data
-    
-    def execute_insert_query(self, query, params=None):
-        print("TO DO")
-        return
-    
-    def execute_update_query(self, query, params=None):
-        print("TO DO")
-        return
-
-    def execute_select_query(self, query, params=None, fetchall=False):
-        json_data = {};
-        db_cursor = self.connection.cursor()
-
-        try:
-            if params:
-                db_cursor.execute(query, params)
-            else:
-                db_cursor.execute(query)
-
-            if fetchall:
-                json_data = format_sql_rows_to_json(db_cursor)
-            else:
-                json_data = format_one_sql_row_to_json(db_cursor)
-
-        except mysql.connector.Error as err:
-            print("Error occured while running the query {}: {}".format(query,err))
-
-        finally:
-            db_cursor.close()
-            self.connection.close()
-
+        json_data = self.db_connector.execute_insert_query(query, (VolunteerID, EventID,))
         return json_data
