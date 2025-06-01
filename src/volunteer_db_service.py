@@ -55,9 +55,9 @@ class VolunteerDatabaseService:
         if EventID == "":
             raise ValueError("Missing Event ID for query operation")
         
-        query = """  Select * from ticket T
+        query = """  Select T.TicketID, V.Name, T.Attendance from ticket T
                      left join volunteer V on T.VolunteerID = V.VolunteerID
-                     where Event_EventID = %s; """
+                     where EventID = %s; """
    
         json_data = self.db_connector.execute_select_query(query, (EventID,))
         return json_data
@@ -104,6 +104,12 @@ class VolunteerDatabaseService:
         json_data = self.db_connector.execute_update_query(query, (EventType, EventTime, OrgID, AreaID, Street, EventID,))
         return json_data
     
+    def read_organization_eventslist(self, OrgID):
+        query = """select EventID from events where OrgID = %s; """
+
+        json_data = self.db_connector.execute_select_query(query, [OrgID])
+        return json_data
+
     def create_event(self, event:Event):
         query = """ insert into events (EventType, EventTime, OrgID, AreaID, Street)
                     values (%s, %s, %s, %s, %s); """
