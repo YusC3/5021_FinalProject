@@ -466,4 +466,40 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `ShowVolunteersAtEvent`(IN event_id 
   END ;;
 DELIMITER ;
 
+# ADDING A NEW ORGANIZATION
+DROP PROCEDURE IF EXISTS AddNewOrganization;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AddNewOrganization`(
+    IN new_name VARCHAR(80),
+    IN new_npoID INT UNSIGNED,
+    IN new_email VARCHAR(100),
+    IN new_phonenumber VARCHAR(30),
+    IN new_areaID INT UNSIGNED,
+    IN new_street VARCHAR(100))
+	
+BEGIN 
+  DECLARE New_Org_ID INT UNSIGNED;   
+	IF EXISTS (
+		SELECT 1 FROM npotype WHERE npotype.NPOTypeID = new_npoID
+	) THEN
+		-- NPOTypeID exists in npotype
+        IF EXISTS (
+			SELECT 1 FROM area WHERE area.AreaID = new_areaID
+            )
+		THEN
+			INSERT INTO `organization` (Name, NPOTypeID, Email, PhoneNumber, AreaID, Street)
+			VALUES (new_name, new_npoID, new_email, new_phonenumber, new_areaID, new_street);
+			SELECT LAST_INSERT_ID() AS New_Org_ID;
+		ELSE
+			SIGNAL SQLSTATE '45000'
+				SET MESSAGE_TEXT = 'AreaID doesn\'t currently exist in database';
+		END IF;
+	ELSE
+		-- NPOTypeID doesn't exist in npotype
+        SIGNAL SQLSTATE '45000'
+			SET MESSAGE_TEXT = 'NPOTypeID doesn\'t currently exist in database';
+	END IF;
+END ;;
+DELIMITER ;
+
 -- Dump completed on 2025-05-16 19:55:51
