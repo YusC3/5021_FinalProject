@@ -27,6 +27,12 @@ class VolunteerDatabaseService:
         json_data = self.db_connector.execute_select_query(query, fetchall=True)
         return json_data
     
+    def read_all_areas(self):
+        query = """ SELECT * FROM area; """
+
+        json_data = self.db_connector.execute_select_query(query, fetchall=True)
+        return json_data
+
     def read_ticket_attendance_percentage(self, EventID):
         query = """
                 SELECT
@@ -39,7 +45,7 @@ class VolunteerDatabaseService:
                 JOIN organization o ON o.OrgID = e.OrgID
                 WHERE t.EventID = %s;"""
 
-        json_data = self.db_connector.execute_select_query(query, [EventID])
+        json_data = self.db_connector.execute_select_query(query, [EventID], fetchall=True)
         return json_data
     
     def read_event_for_eventid(self, EventID):
@@ -48,18 +54,23 @@ class VolunteerDatabaseService:
                 FROM events e
                 WHERE e.EventID = %s;"""
 
-        json_data = self.db_connector.execute_select_query(query, [EventID])
+        json_data = self.db_connector.execute_select_query(query, [EventID], fetchall=True)
         return json_data
     
-    def read_ticket_volunteerids(self, EventID = ""):
-        if EventID == "":
-            raise ValueError("Missing Event ID for query operation")
-        
+    def read_ticket_volunteerids(self, EventID):
         query = """  Select T.TicketID, V.Name, T.Attendance from ticket T
                      left join volunteer V on T.VolunteerID = V.VolunteerID
                      where EventID = %s; """
    
-        json_data = self.db_connector.execute_select_query(query, (EventID,))
+        json_data = self.db_connector.execute_select_query(query, [EventID], fetchall=True)
+        return json_data
+    
+    def read_vendors_area(self, AreaID):
+        query = """  SELECT V.VendorID, V.Name, VT.Type, V.CanDeliver, V.PhoneNumber FROM vendor V 
+                    left join vendortype VT on VT.TypeID = V.TypeID
+                    Where V.AreaID = %s; """
+   
+        json_data = self.db_connector.execute_select_query(query, [AreaID], fetchall=True)
         return json_data
     
     def modify_ticket_inform_attendance(self, TicketID = "", EventID = ""):
@@ -107,7 +118,7 @@ class VolunteerDatabaseService:
     def read_organization_eventslist(self, OrgID):
         query = """select EventID from events where OrgID = %s; """
 
-        json_data = self.db_connector.execute_select_query(query, [OrgID])
+        json_data = self.db_connector.execute_select_query(query, [OrgID], fetchall=True)
         return json_data
 
     def create_event(self, event:Event):
@@ -119,12 +130,9 @@ class VolunteerDatabaseService:
         
         return row_id
     
-    def create_ticket_for_eventid(self, VolunteerID = "", EventID = ""):
-        if (VolunteerID == "" or EventID == ""):
-            raise ValueError("Missing one or more parameters for operation")
-        
+    def create_ticket_for_eventid(self, VolunteerID, EventID): 
         query = """ insert into ticket (VolunteerID, EventID, Attendance)
                     values (%s, %s, false); """
- 
-        json_data = self.db_connector.execute_insert_query(query, (VolunteerID, EventID,))
-        return json_data
+        row_id = self.db_connector.execute_insert_query(query, 
+            (VolunteerID, EventID))
+        return row_id

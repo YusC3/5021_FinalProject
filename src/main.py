@@ -10,6 +10,7 @@ from utils.json_utils import load_json
 from db_connector import DBConnector
 from volunteer_db_service import VolunteerDatabaseService
 from data_models import Event
+from data_models import Ticket
 
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -39,6 +40,14 @@ def read_vendors(
     json_data = database_dependency.database_broker.read_all_vendors()
     return json_data
 
+@app.get("/areas/")
+def read_Areas(
+    database_dependency: 
+        Annotated[DatabaseConnectionDependency, 
+        Depends(DatabaseConnectionDependency)]):
+    json_data = database_dependency.database_broker.read_all_areas()
+    return json_data
+
 @app.get("/Organization/{org_id}/EventsList")
 def read_Organization_EventsList(
     org_id: int,
@@ -58,15 +67,31 @@ def read_TicketInform_Attendance_Percentage(
     return json_data
 
 @app.get("/EventInform/volunteersInEvents/{EventID}")
-def read_TicketInform_volunteers(EventID: str,
+def read_TicketInform_volunteers(EventID: int,
     database_dependency: 
         Annotated[DatabaseConnectionDependency, 
         Depends(DatabaseConnectionDependency)]):
     json_data = database_dependency.database_broker.read_ticket_volunteerids(EventID)
     return json_data
 
+@app.get("/Event={EventID}")
+def read_Vendors_Area(EventID: int,
+    database_dependency: 
+        Annotated[DatabaseConnectionDependency, 
+        Depends(DatabaseConnectionDependency)]):
+    json_data = database_dependency.database_broker.read_event_for_eventid(EventID)
+    return json_data
+
+@app.get("/vendors/area={AreaID}")
+def read_Vendors_Area(AreaID: int,
+    database_dependency: 
+        Annotated[DatabaseConnectionDependency, 
+        Depends(DatabaseConnectionDependency)]):
+    json_data = database_dependency.database_broker.read_vendors_area(AreaID)
+    return json_data
+
 @app.get("/EventInform/UpdateAttendance/{TicketID},{EventID}")
-def Update_TicketInform_Attendance(TicketID: str, EventID: str,
+def Update_TicketInform_Attendance(TicketID: int, EventID: int,
     database_dependency: 
         Annotated[DatabaseConnectionDependency, 
         Depends(DatabaseConnectionDependency)]):
@@ -99,10 +124,12 @@ def create_event(
     json_data = database_dependency.database_broker.read_event_for_eventid(event_id)
     return json_data
 
-@app.get("/AddTickets")
+@app.post("/AddTickets/", status_code=201)
 def Insert_Tickets(
+    ticket: Ticket,
     database_dependency: 
         Annotated[DatabaseConnectionDependency, 
         Depends(DatabaseConnectionDependency)]):
-    json_data = database_dependency.database_broker.create_ticket_for_eventid("1", "1")
-    return json_data
+    ticket_id = database_dependency.database_broker.create_ticket_for_eventid(ticket)
+    #json_data = database_dependency.database_broker.(ticket_id)
+    #return json_data

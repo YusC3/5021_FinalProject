@@ -36,7 +36,7 @@ class DBConnector:
         print("TO DO")
         return
 
-    def execute_select_query(self, query, params=None, fetchall=True):
+    def execute_select_query(self, query, params=None, fetchall=False):
         json_data = {}
         db_cursor = self.connection.cursor()
 
