@@ -39,6 +39,15 @@ def read_vendors(
     json_data = database_dependency.database_broker.read_all_vendors()
     return json_data
 
+@app.get("/Organization/{org_id}/EventsList")
+def read_Organization_EventsList(
+    org_id: int,
+    database_dependency: 
+        Annotated[DatabaseConnectionDependency, 
+        Depends(DatabaseConnectionDependency)]):
+    json_data = database_dependency.database_broker.read_organization_eventslist(org_id)
+    return json_data
+
 @app.get("/events/{event_id}/attendance_percentage")
 def read_TicketInform_Attendance_Percentage(
     event_id: int,
