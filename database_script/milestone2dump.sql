@@ -469,7 +469,7 @@ DELIMITER ;
 # ADDING A NEW ORGANIZATION
 DROP PROCEDURE IF EXISTS AddNewOrganization;
 DELIMITER ;;
-CREATE PROCEDURE `AddNewOrganization`(
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AddNewOrganization`(
     IN new_name VARCHAR(80),
     IN new_npoID INT UNSIGNED,
     IN new_email VARCHAR(100),
@@ -501,9 +501,5 @@ BEGIN
 	END IF;
 END ;;
 DELIMITER ;
-
-Call AddNewOrganization('Zoya', 10, 'a', 'b', 100, 'c');
-
-
 
 -- Dump completed on 2025-05-16 19:55:51
