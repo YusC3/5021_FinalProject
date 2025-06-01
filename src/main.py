@@ -97,3 +97,12 @@ def Insert_Tickets(
         Depends(DatabaseConnectionDependency)]):
     json_data = database_dependency.database_broker.create_ticket_for_eventid("1", "1")
     return json_data
+
+@app.post("/AddNewOrganization/{Name}/{NPOTypeID}/{Email}/{PhoneNumber}/{AreaID}/{Street}")
+def Add_Organization(Name: str, NPOTypeID: int, Email: str, PhoneNumber: str, AreaID: int, Street: str,
+    database_dependency:
+        Annotated[DatabaseConnectionDependency,
+        Depends(DatabaseConnectionDependency)]):
+
+    json_data = database_dependency.database_broker.add_new_organization(Name,NPOTypeID,Email,PhoneNumber,AreaID,Street)
+    return json_data
