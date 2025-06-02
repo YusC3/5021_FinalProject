@@ -9,10 +9,62 @@ from kivy.uix.spinner import Spinner
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.textinput import TextInput
+from kivy.uix.popup import Popup
+from kivy.uix.checkbox import CheckBox
+from data_models.ticket import Ticket, TicketUpdateAttendance
+from data_models.event import Event, EventUpdate
+from data_models.organization import OrganizationUpdate
 
-import main as m
 import requests
-import json
+
+def show_input_popup(on_submit_callback):
+    content = BoxLayout(orientation='vertical', spacing=10, padding=10)
+    
+    label = Label(text="Please type the VolunteerID")
+    text_input = TextInput(multiline=False) 
+    
+    btn_submit = Button(text="confirm", size_hint_y=None, height=40)
+    
+    popup = Popup(title="adding", content=content, size_hint=(0.4, 0.3))
+    
+    def on_submit(instance):
+        user_input = text_input.text
+        popup.dismiss()
+        on_submit_callback(user_input) 
+
+    btn_submit.bind(on_press=on_submit)
+    
+    content.add_widget(label)
+    content.add_widget(text_input)
+    content.add_widget(btn_submit)
+    
+    popup.open()
+
+def YesOrNo_popup(on_submit_callback, text: str):
+    content = BoxLayout(orientation='vertical', spacing=10, padding=10)
+    
+    label = Label(text="Are you sure to " + text + "?") 
+    
+    btn_yes = Button(text="yes", size_hint_y=None, height=40)
+    btn_no = Button(text="no", size_hint_y=None, height=40)
+    
+    popup = Popup(title="comfirm", content=content, size_hint=(0.4, 0.3))
+    
+    def on_Yes(instance):
+        popup.dismiss()
+        on_submit_callback(True)
+    def on_No(instance):
+        popup.dismiss()
+        on_submit_callback(False) 
+
+    btn_yes.bind(on_press=on_Yes)
+    btn_no.bind(on_press=on_No)
+    
+    content.add_widget(label)
+    content.add_widget(btn_yes)
+    content.add_widget(btn_no)
+    
+    popup.open()
 
 def _update_bg(instance, value, bg_rect):
         bg_rect.size = instance.size
@@ -44,17 +96,17 @@ class HomeScreen(Screen):
         layout = BoxLayout(orientation='vertical', spacing=10, padding=20)
         layout.add_widget(Label(text="Home Page", font_size=32))
 
-        btn_inventory = Button(text="Tickets")
-        btn_customer = Button(text="Events")
+        btn_Tickets = Button(text="Tickets")
+        btn_Events = Button(text="Events")
         btn_vendor = Button(text="search Vendors in area")
         btn_Organization_edit = Button(text="Organization")
-        layout.add_widget(btn_inventory)
-        layout.add_widget(btn_customer)
+        layout.add_widget(btn_Tickets)
+        layout.add_widget(btn_Events)
         layout.add_widget(btn_vendor)
         layout.add_widget(btn_Organization_edit)
 
-        btn_inventory.bind(on_press=lambda x: switch_func("Tickets"))
-        btn_customer.bind(on_press=lambda x: switch_func("Events"))
+        btn_Tickets.bind(on_press=self.on_Tickets_enter)
+        btn_Events.bind(on_press=self.on_Events_enter)
         btn_vendor.bind(on_press=lambda x: switch_func("Vendors"))
         btn_Organization_edit.bind(on_press=self.on_organization_enter)
 
@@ -73,6 +125,25 @@ class HomeScreen(Screen):
             org_screen.input_AreaID.text = str(data["AreaID"])
             org_screen.input_Street.text = data["Street"]
         self.switch_func("Organization")
+    
+    def on_Events_enter(self, instance):
+        event_screen = self.manager.get_screen("Events")
+        event_screen.on_buttonclick_edit_update(instance, B=True)
+
+        event_screen.input_EventType.text = ""
+        event_screen.input_EventTime.text = ""
+        event_screen.input_AreaID.text = ""
+        event_screen.input_Street.text = ""
+        event_screen.spinner.text='choose items'
+
+        self.switch_func("Events") 
+    
+    def on_Tickets_enter(self, instance):
+        ticket_screen = self.manager.get_screen("Tickets")
+        ticket_screen.spinner.text='choose items'
+        ticket_screen.grid.clear_widgets()
+
+        self.switch_func("Tickets") 
 
 class TicketsScreen(Screen):
     def __init__(self, switch_func, **kwargs):
@@ -111,28 +182,39 @@ class TicketsScreen(Screen):
         self.spinner.bind(text=self.on_spinner_select)
 
         #button add
-        btn_add = Button(
+        self.btn_add = Button(
             background_normal='Buttonadd.png',
             size_hint=(0.06, 0.08),
             pos_hint={'right': 1, 'top': 0.85}
         )
-        #btn_add.bind(on_press=lambda x: switch_func("home"))
+        self.btn_add.bind(on_press=lambda instance: show_input_popup(self.TicketAdd))
+        self.btn_add.disabled = True
+
+        #button delete
+        self.btn_delete = Button(
+            text='delete',
+            size_hint=(0.06, 0.08),
+            pos_hint={'right': 1, 'top': 0.75}
+        )
+        #self.btn_delete.bind(on_press=lambda instance: YesOrNo_popup(self.TicketDelete, "delete"))
+        self.btn_delete.disabled = True
 
         #excel
-        header = GridLayout(cols=3, height=40, size_hint=(0.8, None), pos_hint={'center_x': 0.5, 'top': 0.85}, spacing=10)
-        headers = ['TicketID', 'Name', 'Attendance']
+        header = GridLayout(cols=4, height=40, size_hint=(0.8, None), pos_hint={'center_x': 0.5, 'top': 0.85}, spacing=10)
+        headers = ['checkbox', 'TicketID', 'Name', 'Attendance']
         for col in headers:
             header.add_widget(Label(text=col, bold=True, color=(1,0,1,1), size_hint_y=None, height=40))
 
         scroll = ScrollView(size_hint=(0.8, 0.8), pos_hint={'center_x': 0.5, 'top': 0.75})
-        self.grid = GridLayout(cols=3, height=40, size_hint_y=None, spacing=5, padding=5)
+        self.grid = GridLayout(cols=4, height=40, size_hint_y=None, spacing=5, padding=5)
         self.grid.bind(minimum_height=self.grid.setter('height'))
         scroll.add_widget(self.grid)
 
         #apply to self
         layout.add_widget(self.spinner)
         layout.add_widget(btn_back)
-        layout.add_widget(btn_add)
+        layout.add_widget(self.btn_add)
+        layout.add_widget(self.btn_delete)
         layout.add_widget(header)  
         layout.add_widget(scroll)   
         self.add_widget(layout)    
@@ -145,14 +227,30 @@ class TicketsScreen(Screen):
             self.grid.clear_widgets()
 
         for row in data:
+            checkbox = CheckBox(size_hint_y=None, height=30)
+            self.grid.add_widget(checkbox)
+
             self.grid.add_widget(Label(text=str(row['TicketID']), size_hint_y=None, height=30, color=(0, 0, 1, 1)))
             self.grid.add_widget(Label(text=row['Name'], size_hint_y=None, height=30, color=(0, 0, 1, 1)))
             attend_text = "Y" if str(row['Attendance']) == "1" else "N"
             self.grid.add_widget(Label(text=attend_text, size_hint_y=None, height=30, color=(0, 0, 1, 1)))
 
-
     def on_spinner_select(self, spinner, text):
+        if self.spinner.text !='choose items':
+            self.btn_add.disabled = False
+            self.btn_delete.disabled = False
         self.add_rows(text)
+    
+    def TicketAdd(self, text):
+        ticket = Ticket(VolunteerID = text, EventID = self.spinner.text)
+        esponse = requests.post("http://localhost:8000/AddTickets/", data=ticket.json())
+        self.on_spinner_select(self.spinner, self.spinner.text)
+
+    def TicketDelete(self, YesOrNo):
+        #if YesOrNo:
+            #ticket = TicketUpdateAttendance(TicketID = , EventID =)
+            #esponse = requests.put("http://localhost:8000/UpdateEvents/", data=ticket.json())
+        self.on_spinner_select(self.spinner, self.spinner.text)
 
 class EventsScreen(Screen):
     def __init__(self, switch_func, **kwargs):
@@ -208,7 +306,7 @@ class EventsScreen(Screen):
             size_hint=(0.05, 0.07),
             pos_hint={'right': 0.85, 'top': 0.5}
         )
-        self.btn_edit.bind(on_press=lambda instance: self.on_buttonclick_edit_update(instance, B=False))
+        self.btn_edit.bind(on_press=lambda instance: self.on_buttonclick_editing(B=False))
 
         # button update
         self.btn_update = Button(
@@ -217,7 +315,7 @@ class EventsScreen(Screen):
             pos_hint={'right': 0.95, 'top': 0.5}
         )
         self.btn_update.disabled = True
-        self.btn_update.bind(on_press=lambda instance: self.on_buttonclick_edit_update(instance, B=True))
+        self.btn_update.bind(on_press=lambda instance: YesOrNo_popup(self.on_buttonclick_update, "update"))
 
         #apply to self
         layout.add_widget(self.EventType_)
@@ -247,13 +345,25 @@ class EventsScreen(Screen):
                 self.input_AreaID.text = str(row['AreaID'])
                 self.input_Street.text = row['Street']
     
-    def on_buttonclick_edit_update(self, instance, B: bool):
+    def on_buttonclick_edit_update(self, instance=None, B=False):
         self.input_EventType.disabled = B
         self.input_EventTime.disabled = B
         self.input_AreaID.disabled = B
         self.input_Street.disabled = B
         self.btn_edit.disabled = not B
         self.btn_update.disabled = B
+
+    def on_buttonclick_editing(self, B):
+        if self.spinner.text !='choose items':
+            self.on_buttonclick_edit_update(B)
+
+    def on_buttonclick_update(self, YesOrNo):
+        if YesOrNo:
+            event = EventUpdate(EventID = self.spinner.text, event_type = self.input_EventType.text, event_time =self.input_EventTime.text , org_id = 1, area_id = self.input_AreaID.text, street = self.input_Street.text)
+            esponse = requests.put("http://localhost:8000/UpdateEvents/", data=event.json())
+        self.on_spinner_select(self.spinner, self.spinner.text)
+        self.on_buttonclick_edit_update(B=True)
+
 
 class VendorsScreen(Screen):
     def __init__(self, switch_func, **kwargs):
@@ -364,7 +474,7 @@ class OrganizationScreen(Screen):
         self.input_PhoneNumber = create_Event_TextInput(center_x=0.15, top=0.5)
         self.input_AreaID = create_Event_TextInput(center_x=0.4, top=0.5)
         self.input_Street = create_Event_TextInput(center_x=0.7, top=0.5, wide = 0.3)
-
+    
         # button edit
         self.btn_edit = Button(
             background_normal='edit.png',
@@ -380,7 +490,7 @@ class OrganizationScreen(Screen):
             pos_hint={'right': 0.95, 'top': 0.3}
         )
         self.btn_update.disabled = True
-        self.btn_update.bind(on_press=lambda instance: self.on_buttonclick_edit_update(instance, B=True))
+        self.btn_update.bind(on_press=lambda instance: YesOrNo_popup(self.on_buttonclick_update, "update"))
 
         #apply to self
         layout.add_widget(self.Name)
@@ -402,7 +512,7 @@ class OrganizationScreen(Screen):
         layout.add_widget(self.btn_update)
         self.add_widget(layout)
 
-    def on_buttonclick_edit_update(self, instance, B: bool):
+    def on_buttonclick_edit_update(self, instance=None, B=False):
         self.input_Name.disabled = B
         self.input_NPOTypeID.disabled = B
         self.input_Email.disabled = B
@@ -411,6 +521,28 @@ class OrganizationScreen(Screen):
         self.input_Street.disabled = B
         self.btn_edit.disabled = not B
         self.btn_update.disabled = B
+    def on_buttonclick_update(self, YesOrNo):
+        if YesOrNo:
+            organization = OrganizationUpdate(OrgID = 1, 
+                                              Name = self.input_Name.text, 
+                                              NPOTypeID = int(self.input_NPOTypeID.text), 
+                                              Email = self.input_Email.text, 
+                                              PhoneNumber = self.input_PhoneNumber.text, 
+                                              AreaID = int(self.input_AreaID.text),
+                                              Street = self.input_Street.text)
+            esponse = requests.put("http://localhost:8000/UpdateOrganization", data=organization.json())
+
+        response = requests.get("http://localhost:8000/organization/orgid=1")
+        if response.status_code == 200:
+            data = response.json()
+            self.input_Name.text = data["Name"]
+            self.input_NPOTypeID.text = str(data["NPOTypeID"])
+            self.input_Email.text = data["Email"]
+            self.input_PhoneNumber.text = data["PhoneNumber"]
+            self.input_AreaID.text = str(data["AreaID"])
+            self.input_Street.text = data["Street"]
+        self.on_buttonclick_edit_update(B=True)
+
 
 class MobileStyleApp(App):
     def build(self):

@@ -9,12 +9,12 @@ from fastapi import Depends, FastAPI
 from utils.json_utils import load_json
 from db_connector import DBConnector
 from volunteer_db_service import VolunteerDatabaseService
-from data_models import Event
-from data_models import Ticket
-
+from data_models.event import Event, EventUpdate
+from data_models.ticket import Ticket, TicketUpdateAttendance
+from data_models.organization import OrganizationUpdate
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
-dbConnectionStrings = load_json(current_dir, "..\dev\dbConnectionStrings.json")
+dbConnectionStrings = load_json(current_dir, "dev/dbConnectionStrings.json")
 app = FastAPI()
 
 class DatabaseConnectionDependency:
@@ -98,31 +98,31 @@ def read_Vendors_Area(OrgID: int,
     json_data = database_dependency.database_broker.read_organization(OrgID)
     return json_data
 
-@app.get("/EventInform/UpdateAttendance/{TicketID},{EventID}")
-def Update_TicketInform_Attendance(TicketID: int, EventID: int,
+@app.put("/EventInform/UpdateAttendance/", status_code=201)
+def Update_TicketInform_Attendance(ticketupdate: TicketUpdateAttendance,
     database_dependency: 
         Annotated[DatabaseConnectionDependency, 
         Depends(DatabaseConnectionDependency)]):
-    json_data = database_dependency.database_broker.modify_ticket_inform_attendance(TicketID,EventID)
+    json_data = database_dependency.database_broker.modify_ticket_inform_attendance(ticketupdate)
     return json_data
 
-@app.get("/UpdateOrganization")
-def Update_Organization(
+@app.put("/UpdateOrganization", status_code=201)
+def Update_Organization(organization: OrganizationUpdate,
     database_dependency: 
         Annotated[DatabaseConnectionDependency, 
         Depends(DatabaseConnectionDependency)]):
-    json_data = database_dependency.database_broker.modify_organization_for_orid("1", "Human Rights Watch", "1", "info@humanrightswatch.org", "(166) 822-6378", "100", "Cherry St")
+    json_data = database_dependency.database_broker.modify_organization_for_orid(organization)
     return json_data
 
-@app.get("/UpdateEvents")
-def Update_Event(
+@app.put("/UpdateEvents/", status_code=201)
+def Update_Event(eventupdate: EventUpdate,
     database_dependency: 
         Annotated[DatabaseConnectionDependency, 
         Depends(DatabaseConnectionDependency)]):
-    json_data = database_dependency.database_broker.modify_event_for_eventid("1", "Food Distribution", "2021-05-24 11:47:00", "1", "100", "Cherry St")
+    json_data = database_dependency.database_broker.modify_event_for_eventid(eventupdate)
     return json_data
 
-@app.post("/events/", status_code=201)
+@app.post("/events/", )
 def create_event(
     event: Event,
     database_dependency:
@@ -133,11 +133,10 @@ def create_event(
     return json_data
 
 @app.post("/AddTickets/", status_code=201)
-def Insert_Tickets(
+def create_tickets(
     ticket: Ticket,
     database_dependency: 
         Annotated[DatabaseConnectionDependency, 
         Depends(DatabaseConnectionDependency)]):
     ticket_id = database_dependency.database_broker.create_ticket_for_eventid(ticket)
-    #json_data = database_dependency.database_broker.(ticket_id)
-    #return json_data
+    return ticket_id

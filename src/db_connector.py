@@ -9,7 +9,7 @@ class DBConnector:
         self.connection = connection
         return
     
-    def execute_insert_query(self, query, params):
+    def execute_insert_query(self, query, params=None):
         row_id = None
         db_cursor = self.connection.cursor()
 
@@ -32,9 +32,51 @@ class DBConnector:
 
         return row_id
     
-    def execute_update_query(self, query, params=None):
-        print("TO DO")
-        return
+    def execute_delete_query(self, query, params=None):
+        deleted_row_id = None
+        db_cursor = self.connection.cursor()
+
+        try:
+            db_cursor.execute(query, params)
+            self.connection.commit()
+            self._validate_delete(db_cursor, query)
+            deleted_row_id = db_cursor.lastrowid
+
+        except errorcode.OBSOLETE_ER_CANT_DELETE_FILE as delete_err:
+            self.connection.rollback()
+            raise HTTPException(status_code=400, detail="Could not delete data")
+        
+        except mysql.connector.Error as err:
+            self.connection.rollback()
+            print("Error occured while running the query {}: {}".format(query,err))
+
+        finally:
+            db_cursor.close()
+
+        return deleted_row_id
+
+    def execute_updated_query(self, query, params=None):
+        updated_row_id = None
+        db_cursor = self.connection.cursor()
+
+        try:
+            db_cursor.execute(query, params)
+            self.connection.commit()
+            self._validate_delete(db_cursor, query)
+            updated_row_id = db_cursor.lastrowid
+
+        except errorcode.ER_X_BAD_UPDATE_DATA as updated_err:
+            self.connection.rollback()
+            raise HTTPException(status_code=400, detail="Could not update data")
+        
+        except mysql.connector.Error as err:
+            self.connection.rollback()
+            print("Error occured while running the query {}: {}".format(query,err))
+
+        finally:
+            db_cursor.close()
+
+        return updated_row_id
 
     def execute_select_query(self, query, params=None, fetchall=False):
         json_data = {}
@@ -60,6 +102,14 @@ class DBConnector:
 
         return json_data
     
+    def _validate_delete(self, db_cursor, query):
+        if db_cursor.rowcount <= 0:
+            raise errorcode.ER_X_BAD_UPDATE_DATA("Could not update data for the query: {}".format(query))
+        
+    def _validate_delete(self, db_cursor, query):
+        if db_cursor.rowcount <= 0:
+            raise errorcode.OBSOLETE_ER_CANT_DELETE_FILE("Could not delete data for the query: {}".format(query))
+        
     def _validate_insert(self, db_cursor, query):
         if db_cursor.rowcount <= 0:
             raise errorcode.ER_X_BAD_INSERT_DATA("The data could not be inserted for the query: {}".format(query))

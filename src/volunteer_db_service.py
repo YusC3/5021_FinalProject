@@ -1,4 +1,6 @@
-from data_models import Event
+from data_models.event import Event, EventUpdate
+from data_models.ticket import Ticket, TicketUpdateAttendance
+from data_models.organization import OrganizationUpdate
 from db_connector import DBConnector
 
 class VolunteerDatabaseService:
@@ -80,21 +82,14 @@ class VolunteerDatabaseService:
         json_data = self.db_connector.execute_select_query(query, [OrgID], fetchall=False)
         return json_data
 
-    def modify_ticket_inform_attendance(self, TicketID = "", EventID = ""):
-        if (TicketID == "" or EventID == ""):
-            raise ValueError("Missing Ticket ID or Event ID for query operation")
-        
+    def modify_ticket_inform_attendance(self, ticketupdate: TicketUpdateAttendance):
         query = """ update ticket 
                     set Attendance = 1 
                     where TicketID = %s and EventID = %s; """
- 
-        json_data = self.db_connector.execute_update_query(query, (TicketID, EventID,))
+        json_data = self.db_connector.execute_updated_query(query, (ticketupdate.TicketID, ticketupdate.EventID))
         return json_data
     
-    def modify_organization_for_orid(self, OrgID = "", OName_ = "", NPOTypeID = "", Email_ = "", PhoneNumber = "", AreaID = "", Street = ""):
-        if (OrgID == "" or OName_ == "" or NPOTypeID == "" or PhoneNumber == "" or AreaID == ""):
-            raise ValueError("Missing one or more parameters for operation")
-        
+    def modify_organization_for_orid(self, organization: OrganizationUpdate):       
         query = """ update organization 
                     set Name = %s, 
                         NPOTypeID = %s, 
@@ -104,12 +99,11 @@ class VolunteerDatabaseService:
                         Street = %s 
                     where OrgID = %s; """
         
-        json_data = self.db_connector.execute_update_query(query, (OName_, NPOTypeID, Email_, PhoneNumber, AreaID, Street, OrgID,))
+        json_data = self.db_connector.execute_updated_query(query, 
+            (organization.Name, organization.NPOTypeID, organization.Email, organization.PhoneNumber, organization.AreaID, organization.Street, organization.OrgID))
         return json_data
     
-    def modify_event_for_eventid(self, EventID = "", EventType = "", EventTime = "", OrgID = "", AreaID = "", Street = ""):
-        if (EventID == "" or EventType == "" or EventTime == "" or OrgID == "" or AreaID == ""):
-            raise ValueError("Missing one or more parameters for operation")
+    def modify_event_for_eventid(self, eventupdate: EventUpdate):
         
         query = """ update events 
                     set EventType = %s, 
@@ -119,7 +113,8 @@ class VolunteerDatabaseService:
                         Street = %s 
                     where EventID = %s; """
  
-        json_data = self.db_connector.execute_update_query(query, (EventType, EventTime, OrgID, AreaID, Street, EventID,))
+        json_data = self.db_connector.execute_updated_query(query, 
+            (eventupdate.event_type, eventupdate.event_time, eventupdate.org_id, eventupdate.area_id, eventupdate.street, eventupdate.EventID))
         return json_data
     
     def read_organization_eventslist(self, OrgID):
@@ -137,9 +132,9 @@ class VolunteerDatabaseService:
         
         return row_id
     
-    def create_ticket_for_eventid(self, VolunteerID, EventID): 
+    def create_ticket_for_eventid(self, ticket: Ticket): 
         query = """ insert into ticket (VolunteerID, EventID, Attendance)
                     values (%s, %s, false); """
         row_id = self.db_connector.execute_insert_query(query, 
-            (VolunteerID, EventID))
+            (ticket.VolunteerID, ticket.EventID))
         return row_id
