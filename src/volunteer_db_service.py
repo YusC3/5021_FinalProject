@@ -73,6 +73,13 @@ class VolunteerDatabaseService:
         json_data = self.db_connector.execute_select_query(query, [AreaID], fetchall=True)
         return json_data
     
+    def read_organization(self, OrgID):
+        query = """ SELECT Name, NPOTypeID, Email, PhoneNumber, AreaID, Street FROM organization 
+                    Where OrgID = %s; """
+   
+        json_data = self.db_connector.execute_select_query(query, [OrgID], fetchall=False)
+        return json_data
+
     def modify_ticket_inform_attendance(self, TicketID = "", EventID = ""):
         if (TicketID == "" or EventID == ""):
             raise ValueError("Missing Ticket ID or Event ID for query operation")
