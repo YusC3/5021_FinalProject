@@ -63,3 +63,21 @@ class DBConnector:
     def _validate_insert(self, db_cursor, query):
         if db_cursor.rowcount <= 0:
             raise errorcode.ER_X_BAD_INSERT_DATA("The data could not be inserted for the query: {}".format(query))
+        
+    def execute_stored_procedure(self, proc_name:str, params=None):
+        row_id = None
+        db_cursor = self.connection.cursor()
+
+        try:
+            params.ag
+            result_args = db_cursor.callproc(proc_name, params)
+            row_id = result_args[6]
+        
+        except mysql.connector.Error as err:
+            self.connection.rollback()
+            print("Error occured while running the stored procedure {}: {}".format(proc_name,err))
+
+        finally:
+            db_cursor.close()
+
+        return row_id

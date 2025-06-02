@@ -1,4 +1,5 @@
-from data_models import Event
+from data_models.event import Event
+from data_models.organization import Organization
 from db_connector import DBConnector
 
 class VolunteerDatabaseService:
@@ -123,18 +124,11 @@ class VolunteerDatabaseService:
         json_data = self.db_connector.execute_insert_query(query, (VolunteerID, EventID,))
         return json_data
     
-    def add_new_organization(self, new_name = "", new_npoid = 0, new_email="",
-                             new_phonenumber = "", new_areaID = 0, new_street=""):
+    def add_new_organization(self, organization:Organization):
         
-        if (new_name == "" or new_npoid == 0 or new_email == "" or new_phonenumber == ""
-            or new_areaID == 0 or new_street == ""):
-            raise ValueError("Missing one or more parameters for operation")
-        
-        query = "CALL AddNewOrganization(%s, %s, %s, %s, %s, %s);"
-        
-        try:
-            json_data = self.db_connector.execute_select_query(query, [new_name, new_npoid, new_email, 
-                                                                   new_phonenumber, new_areaID, new_street])
-            return json_data
-        except mysql.connector.Error as e:
-            raise RuntimeError(f"MySQL error: Failed to add organization to database.")
+        proc_name = "AddNewOrganization"
+        created_row_id = self.db_connector.execute_stored_procedure(proc_name, (organization.name, organization.npotype_id,
+                                                                       organization.email, organization.phone_number,
+                                                                       organization.area_id, organization.street, O))
+        return created_row_id
+    

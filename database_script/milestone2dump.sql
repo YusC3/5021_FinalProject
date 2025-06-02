@@ -475,10 +475,10 @@ CREATE PROCEDURE `AddNewOrganization`(
     IN new_email VARCHAR(100),
     IN new_phonenumber VARCHAR(30),
     IN new_areaID INT UNSIGNED,
-    IN new_street VARCHAR(100))
+    IN new_street VARCHAR(100),
+    OUT new_orgID INT UNSIGNED)
 	
 BEGIN 
-  DECLARE New_Org_ID INT UNSIGNED;   
 	IF EXISTS (
 		SELECT 1 FROM npotype WHERE npotype.NPOTypeID = new_npoID
 	) THEN
@@ -489,7 +489,7 @@ BEGIN
         THEN
           INSERT INTO `organization` (Name, NPOTypeID, Email, PhoneNumber, AreaID, Street)
           VALUES (new_name, new_npoID, new_email, new_phonenumber, new_areaID, new_street);
-          SELECT LAST_INSERT_ID() AS New_Org_ID;
+          SELECT LAST_INSERT_ID() INTO new_orgID;
         ELSE
           SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'AreaID doesn\'t currently exist in database';
