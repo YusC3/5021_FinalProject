@@ -13,7 +13,7 @@ def load_json(current_dir, file_name):
 def format_sql_rows_to_json(cursor):
     rows = cursor.fetchall()
 
-    if rows is None:
+    if not rows:
         return {} 
     
     columns = cursor.column_names
@@ -23,7 +23,7 @@ def format_sql_rows_to_json(cursor):
 def format_one_sql_row_to_json(cursor):
     row = cursor.fetchone()
 
-    if row is None:
+    if not row:
         return {}  
     
     columns = cursor.column_names
