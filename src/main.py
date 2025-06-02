@@ -90,6 +90,14 @@ def read_Vendors_Area(AreaID: int,
     json_data = database_dependency.database_broker.read_vendors_area(AreaID)
     return json_data
 
+@app.get("/organization/orgid={OrgID}")
+def read_Vendors_Area(OrgID: int,
+    database_dependency: 
+        Annotated[DatabaseConnectionDependency, 
+        Depends(DatabaseConnectionDependency)]):
+    json_data = database_dependency.database_broker.read_organization(OrgID)
+    return json_data
+
 @app.get("/EventInform/UpdateAttendance/{TicketID},{EventID}")
 def Update_TicketInform_Attendance(TicketID: int, EventID: int,
     database_dependency: 

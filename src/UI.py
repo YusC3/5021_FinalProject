@@ -18,24 +18,61 @@ def _update_bg(instance, value, bg_rect):
         bg_rect.size = instance.size
         bg_rect.pos = instance.pos
 
+def create_Event_Label(text_: str, center_x: float, top: float):
+    return Label(
+        text = text_,
+        font_size=18,
+        size_hint=(0.5, 0.5),
+        pos_hint={'center_x': center_x, 'top': top},
+        color=(0, 0, 1, 1)
+    )
+    
+def create_Event_TextInput(center_x: float, top: float, wide = 0.18): 
+    return_TextInput = TextInput(
+        hint_text="Type something...", 
+        multiline=False, 
+        size_hint = (wide, 0.07),
+        pos_hint={'center_x': center_x, 'top': top},
+    )
+    return_TextInput.disabled = True
+    return return_TextInput
+
 class HomeScreen(Screen):
     def __init__(self, switch_func, **kwargs):
         super().__init__(**kwargs)
+        self.switch_func = switch_func
         layout = BoxLayout(orientation='vertical', spacing=10, padding=20)
         layout.add_widget(Label(text="Home Page", font_size=32))
 
         btn_inventory = Button(text="Tickets")
         btn_customer = Button(text="Events")
-        btn_vendor = Button(text="Vendors")
+        btn_vendor = Button(text="search Vendors in area")
+        btn_Organization_edit = Button(text="Organization")
         layout.add_widget(btn_inventory)
         layout.add_widget(btn_customer)
         layout.add_widget(btn_vendor)
+        layout.add_widget(btn_Organization_edit)
 
         btn_inventory.bind(on_press=lambda x: switch_func("Tickets"))
         btn_customer.bind(on_press=lambda x: switch_func("Events"))
         btn_vendor.bind(on_press=lambda x: switch_func("Vendors"))
+        btn_Organization_edit.bind(on_press=self.on_organization_enter)
 
         self.add_widget(layout)
+    
+    def on_organization_enter(self, instance):
+        org_screen = self.manager.get_screen("Organization")
+        org_screen.on_buttonclick_edit_update(instance, B=True)
+        response = requests.get("http://localhost:8000/organization/orgid=1")
+        if response.status_code == 200:
+            data = response.json()
+            org_screen.input_Name.text = data["Name"]
+            org_screen.input_NPOTypeID.text = str(data["NPOTypeID"])
+            org_screen.input_Email.text = data["Email"]
+            org_screen.input_PhoneNumber.text = data["PhoneNumber"]
+            org_screen.input_AreaID.text = str(data["AreaID"])
+            org_screen.input_Street.text = data["Street"]
+        self.switch_func("Organization")
 
 class TicketsScreen(Screen):
     def __init__(self, switch_func, **kwargs):
@@ -154,70 +191,16 @@ class EventsScreen(Screen):
         self.spinner.bind(text=self.on_spinner_select)
 
         #lable for event
-        EventType_ = Label(
-            text="EventType",
-            font_size=18,
-            size_hint=(0.5, 0.5),
-            pos_hint={'center_x': 0.1, 'top': 1},
-            color=(0, 0, 1, 1)
-        )
-
-        EventTime_ = Label(
-            text="EventTime",
-            font_size=18,
-            size_hint=(0.5, 0.5),
-            pos_hint={'center_x': 0.35, 'top': 1},
-            color=(0, 0, 1, 1)
-        )
-
-        AreaID_ = Label(
-            text="Area",
-            font_size=18,
-            size_hint=(0.5, 0.5),
-            pos_hint={'center_x': 0.6, 'top': 1},
-            color=(0, 0, 1, 1)
-        )
-
-        Street_ = Label(
-            text="Street",
-            font_size=18,
-            size_hint=(0.5, 0.5),
-            pos_hint={'center_x': 0.85, 'top': 1},
-            color=(0, 0, 1, 1)
-        )
+        self.EventType_ = create_Event_Label(text_="EventType", center_x=0.1, top=1)
+        self.EventTime_ = create_Event_Label(text_="EventTime", center_x=0.35, top=1)
+        self.AreaID_ = create_Event_Label(text_="Area", center_x=0.6, top=1)
+        self.Street_ = create_Event_Label(text_="Street", center_x=0.85, top=1)
 
         #TextInput for event
-        self.input_EventType = TextInput(
-            hint_text="Type something...", 
-            multiline=False, 
-            size_hint = (0.18, 0.07),
-            pos_hint={'center_x': 0.15, 'top': 0.7},
-        )
-        self.input_EventType.disabled = True
-
-        self.input_EventTime = TextInput(
-            hint_text="Type something...", 
-            multiline=False, 
-            size_hint = (0.18, 0.07),
-            pos_hint={'center_x': 0.4, 'top': 0.7},
-        )
-        self.input_EventTime.disabled = True
-
-        self.input_AreaID = TextInput(
-            hint_text="Type something...", 
-            multiline=False, 
-            size_hint = (0.18, 0.07),
-            pos_hint={'center_x': 0.65, 'top': 0.7},
-        )
-        self.input_AreaID.disabled = True
-
-        self.input_Street = TextInput(
-            hint_text="Type something...", 
-            multiline=False, 
-            size_hint = (0.18, 0.07),
-            pos_hint={'center_x': 0.9, 'top': 0.7},
-        )
-        self.input_Street.disabled = True
+        self.input_EventType = create_Event_TextInput(center_x=0.15, top=0.7)
+        self.input_EventTime = create_Event_TextInput(center_x=0.4, top=0.7)
+        self.input_AreaID = create_Event_TextInput(center_x=0.65, top=0.7)
+        self.input_Street = create_Event_TextInput(center_x=0.9, top=0.7)
 
         # button edit
         self.btn_edit = Button(
@@ -237,10 +220,10 @@ class EventsScreen(Screen):
         self.btn_update.bind(on_press=lambda instance: self.on_buttonclick_edit_update(instance, B=True))
 
         #apply to self
-        layout.add_widget(EventType_)
-        layout.add_widget(EventTime_)
-        layout.add_widget(AreaID_)
-        layout.add_widget(Street_)
+        layout.add_widget(self.EventType_)
+        layout.add_widget(self.EventTime_)
+        layout.add_widget(self.AreaID_)
+        layout.add_widget(self.Street_)
 
         layout.add_widget(self.input_EventType)
         layout.add_widget(self.input_EventTime)
@@ -346,13 +329,96 @@ class VendorsScreen(Screen):
     def on_spinner_select(self, spinner, text):
         self.add_rows(self.spinner_map[text])
 
+class OrganizationScreen(Screen):
+    def __init__(self, switch_func, **kwargs):
+        super().__init__(**kwargs)
+
+        #layout background
+        layout = FloatLayout()
+        with layout.canvas.before:
+            Color(0.85, 0.92, 1, 1)  # light blue (R, G, B, A)
+            self.bg_rect = Rectangle(size=layout.size, pos=layout.pos)
+        layout.bind(size=lambda instance, value: _update_bg(instance, value, self.bg_rect), 
+                    pos=lambda instance, value: _update_bg(instance, value, self.bg_rect))
+        
+        #button return
+        btn_back = Button(
+            background_normal='ReturnB.png',
+            size_hint=(0.08, 0.08),
+            pos_hint={'right': 1, 'top': 1}
+        )
+        btn_back.bind(on_press=lambda x: switch_func("home"))
+
+        #lable for Organization
+        self.Name = create_Event_Label(text_="Name", center_x=0.09, top=1)
+        self.NPOTypeID = create_Event_Label(text_="NPOTypeID", center_x=0.36, top=1)
+        self.Email = create_Event_Label(text_="Email", center_x=0.58, top=1)
+        self.PhoneNumber = create_Event_Label(text_="PhoneNumber", center_x=0.12, top=0.8)
+        self.AreaID = create_Event_Label(text_="AreaID", center_x=0.34, top=0.8)
+        self.Street = create_Event_Label(text_="Street", center_x=0.58, top=0.8)
+
+        #TextInput for Organization
+        self.input_Name = create_Event_TextInput(center_x=0.15, top=0.7)
+        self.input_NPOTypeID = create_Event_TextInput(center_x=0.4, top=0.7)
+        self.input_Email = create_Event_TextInput(center_x=0.7, top=0.7, wide = 0.3)
+        self.input_PhoneNumber = create_Event_TextInput(center_x=0.15, top=0.5)
+        self.input_AreaID = create_Event_TextInput(center_x=0.4, top=0.5)
+        self.input_Street = create_Event_TextInput(center_x=0.7, top=0.5, wide = 0.3)
+
+        # button edit
+        self.btn_edit = Button(
+            background_normal='edit.png',
+            size_hint=(0.05, 0.07),
+            pos_hint={'right': 0.85, 'top': 0.3}
+        )
+        self.btn_edit.bind(on_press=lambda instance: self.on_buttonclick_edit_update(instance, B=False))
+
+        # button update
+        self.btn_update = Button(
+            background_normal='check.png',
+            size_hint=(0.08, 0.08),
+            pos_hint={'right': 0.95, 'top': 0.3}
+        )
+        self.btn_update.disabled = True
+        self.btn_update.bind(on_press=lambda instance: self.on_buttonclick_edit_update(instance, B=True))
+
+        #apply to self
+        layout.add_widget(self.Name)
+        layout.add_widget(self.NPOTypeID)
+        layout.add_widget(self.Email)
+        layout.add_widget(self.PhoneNumber)
+        layout.add_widget(self.AreaID)
+        layout.add_widget(self.Street)
+
+        layout.add_widget(self.input_Name)
+        layout.add_widget(self.input_NPOTypeID)
+        layout.add_widget(self.input_Email)
+        layout.add_widget(self.input_PhoneNumber)
+        layout.add_widget(self.input_AreaID)
+        layout.add_widget(self.input_Street)
+
+        layout.add_widget(btn_back)
+        layout.add_widget(self.btn_edit)
+        layout.add_widget(self.btn_update)
+        self.add_widget(layout)
+
+    def on_buttonclick_edit_update(self, instance, B: bool):
+        self.input_Name.disabled = B
+        self.input_NPOTypeID.disabled = B
+        self.input_Email.disabled = B
+        self.input_PhoneNumber.disabled = B
+        self.input_AreaID.disabled = B
+        self.input_Street.disabled = B
+        self.btn_edit.disabled = not B
+        self.btn_update.disabled = B
+
 class MobileStyleApp(App):
     def build(self):
         self.sm = ScreenManager()
 
         def switch_screen(target_name):
             current = self.sm.current
-            screens_order = ["home", "Tickets", "Events", "Vendors"]
+            screens_order = ["home", "Tickets", "Events", "Vendors", "Organization"]
             direction = "left" if screens_order.index(target_name) > screens_order.index(current) else "right"
             self.sm.transition = SlideTransition(direction=direction)
             self.sm.current = target_name
@@ -362,6 +428,7 @@ class MobileStyleApp(App):
         self.sm.add_widget(TicketsScreen(name="Tickets", switch_func=switch_screen))
         self.sm.add_widget(EventsScreen(name="Events", switch_func=switch_screen))
         self.sm.add_widget(VendorsScreen(name="Vendors", switch_func=switch_screen))
+        self.sm.add_widget(OrganizationScreen(name="Organization", switch_func=switch_screen))
 
         return self.sm
 
