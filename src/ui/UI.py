@@ -13,7 +13,7 @@ from kivy.uix.popup import Popup
 from kivy.uix.checkbox import CheckBox
 from data_models.ticket import Ticket, TicketUpdateAttendance
 from data_models.event import Event, EventUpdate
-from data_models.organization import OrganizationUpdate
+from data_models.organization import Organization
 
 import requests
 
@@ -523,13 +523,13 @@ class OrganizationScreen(Screen):
         self.btn_update.disabled = B
     def on_buttonclick_update(self, YesOrNo):
         if YesOrNo:
-            organization = OrganizationUpdate(OrgID = 1, 
-                                              Name = self.input_Name.text, 
-                                              NPOTypeID = int(self.input_NPOTypeID.text), 
-                                              Email = self.input_Email.text, 
-                                              PhoneNumber = self.input_PhoneNumber.text, 
-                                              AreaID = int(self.input_AreaID.text),
-                                              Street = self.input_Street.text)
+            organization = Organization(org_id = 1, 
+                                              name = self.input_Name.text, 
+                                              npotype_id = int(self.input_NPOTypeID.text), 
+                                              email = self.input_Email.text, 
+                                              phone_number = self.input_PhoneNumber.text, 
+                                              area_id = int(self.input_AreaID.text),
+                                              street = self.input_Street.text)
             esponse = requests.put("http://localhost:8000/UpdateOrganization", data=organization.json())
 
         response = requests.get("http://localhost:8000/organization/orgid=1")
