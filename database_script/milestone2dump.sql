@@ -416,7 +416,7 @@ UNLOCK TABLES;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `AddNewVolunteerThroughVolunterOrg`( 
+CREATE PROCEDURE `AddNewVolunteerThroughVolunterOrg`( 
 
     IN NewName VARCHAR(100), 
 	
@@ -459,7 +459,7 @@ DELIMITER ;
 # SHOWING THE LIST OF ALL VOLUNTEERS IN THE EVENT GIVEN THE EVENTID
 DROP PROCEDURE IF EXISTS ShowVolunteersAtEvent;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `ShowVolunteersAtEvent`(IN event_id INT)
+CREATE PROCEDURE `ShowVolunteersAtEvent`(IN event_id INT)
   BEGIN
   SELECT 'Showing All Volunteers for Event' AS message;
   SELECT * FROM volunteer JOIN ticket ON ticket.Event_EventID = event_id;
@@ -469,16 +469,16 @@ DELIMITER ;
 # ADDING A NEW ORGANIZATION
 DROP PROCEDURE IF EXISTS AddNewOrganization;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `AddNewOrganization`(
+CREATE PROCEDURE `AddNewOrganization`(
     IN new_name VARCHAR(80),
     IN new_npoID INT UNSIGNED,
     IN new_email VARCHAR(100),
     IN new_phonenumber VARCHAR(30),
     IN new_areaID INT UNSIGNED,
-    IN new_street VARCHAR(100))
+    IN new_street VARCHAR(100),
+    OUT new_orgID INT UNSIGNED)
 	
 BEGIN 
-  DECLARE New_Org_ID INT UNSIGNED;   
 	IF EXISTS (
 		SELECT 1 FROM npotype WHERE npotype.NPOTypeID = new_npoID
 	) THEN
@@ -486,13 +486,13 @@ BEGIN
         IF EXISTS (
 			SELECT 1 FROM area WHERE area.AreaID = new_areaID
             )
-		THEN
-			INSERT INTO `organization` (Name, NPOTypeID, Email, PhoneNumber, AreaID, Street)
-			VALUES (new_name, new_npoID, new_email, new_phonenumber, new_areaID, new_street);
-			SELECT LAST_INSERT_ID() AS New_Org_ID;
-		ELSE
-			SIGNAL SQLSTATE '45000'
-				SET MESSAGE_TEXT = 'AreaID doesn\'t currently exist in database';
+        THEN
+          INSERT INTO `organization` (Name, NPOTypeID, Email, PhoneNumber, AreaID, Street)
+          VALUES (new_name, new_npoID, new_email, new_phonenumber, new_areaID, new_street);
+          SELECT LAST_INSERT_ID() INTO new_orgID;
+        ELSE
+          SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'AreaID doesn\'t currently exist in database';
 		END IF;
 	ELSE
 		-- NPOTypeID doesn't exist in npotype

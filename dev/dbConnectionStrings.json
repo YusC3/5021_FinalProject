@@ -1,6 +1,6 @@
 {
-    "user": "",
-    "password": "",
-    "host": "",
-    "database": ""
+    "user": "root",
+    "password": "CPSC5021",
+    "host": "127.0.0.1",
+    "database": "volunteerdb"
 }

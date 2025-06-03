@@ -1,6 +1,6 @@
 from data_models.event import Event, EventUpdate
 from data_models.ticket import Ticket, TicketUpdateAttendance
-from data_models.organization import OrganizationUpdate
+from data_models.organization import Organization
 from db_connector import DBConnector
 
 class VolunteerDatabaseService:
@@ -89,7 +89,7 @@ class VolunteerDatabaseService:
         json_data = self.db_connector.execute_updated_query(query, (ticketupdate.TicketID, ticketupdate.EventID))
         return json_data
     
-    def modify_organization_for_orid(self, organization: OrganizationUpdate):       
+    def modify_organization_for_orid(self, organization: Organization):       
         query = """ update organization 
                     set Name = %s, 
                         NPOTypeID = %s, 
@@ -100,7 +100,7 @@ class VolunteerDatabaseService:
                     where OrgID = %s; """
         
         json_data = self.db_connector.execute_updated_query(query, 
-            (organization.Name, organization.NPOTypeID, organization.Email, organization.PhoneNumber, organization.AreaID, organization.Street, organization.OrgID))
+            (organization.name, organization.npotype_id, organization.email, organization.phone_number, organization.area_id, organization.street, organization.org_id))
         return json_data
     
     def modify_event_for_eventid(self, eventupdate: EventUpdate):
@@ -135,6 +135,14 @@ class VolunteerDatabaseService:
     def create_ticket_for_eventid(self, ticket: Ticket): 
         query = """ insert into ticket (VolunteerID, EventID, Attendance)
                     values (%s, %s, false); """
-        row_id = self.db_connector.execute_insert_query(query, 
-            (ticket.VolunteerID, ticket.EventID))
-        return row_id
+ 
+        json_data = self.db_connector.execute_insert_query(query, (VolunteerID, EventID,))
+        return json_data
+    
+    def add_new_organization(self, organization:Organization):
+        O = None
+        proc_name = "AddNewOrganization"
+        created_row_id = self.db_connector.execute_stored_procedure(proc_name, (organization.name, organization.npotype_id,
+                                                                       organization.email, organization.phone_number,
+                                                                       organization.area_id, organization.street, O))
+        return created_row_id

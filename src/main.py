@@ -11,7 +11,8 @@ from db_connector import DBConnector
 from volunteer_db_service import VolunteerDatabaseService
 from data_models.event import Event, EventUpdate
 from data_models.ticket import Ticket, TicketUpdateAttendance
-from data_models.organization import OrganizationUpdate
+from data_models.organization import Organization
+
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 dbConnectionStrings = load_json(current_dir, "dev/dbConnectionStrings.json")
@@ -107,7 +108,7 @@ def Update_TicketInform_Attendance(ticketupdate: TicketUpdateAttendance,
     return json_data
 
 @app.put("/UpdateOrganization", status_code=201)
-def Update_Organization(organization: OrganizationUpdate,
+def Update_Organization(organization: Organization,
     database_dependency: 
         Annotated[DatabaseConnectionDependency, 
         Depends(DatabaseConnectionDependency)]):
@@ -138,5 +139,15 @@ def create_tickets(
     database_dependency: 
         Annotated[DatabaseConnectionDependency, 
         Depends(DatabaseConnectionDependency)]):
-    ticket_id = database_dependency.database_broker.create_ticket_for_eventid(ticket)
-    return ticket_id
+    json_data = database_dependency.database_broker.create_ticket_for_eventid("1", "1")
+    return json_data
+
+@app.post("/organization/", )
+def create_organization(
+    organization: Organization,
+    database_dependency:
+        Annotated[DatabaseConnectionDependency, 
+        Depends(DatabaseConnectionDependency)]):
+    org_id = database_dependency.database_broker.add_new_organization(organization)
+    #json_data = database_dependency.database_broker.read_event_for_eventid(event_id)
+    return {"org_id":org_id}
