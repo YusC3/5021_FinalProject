@@ -60,7 +60,7 @@ class VolunteerDatabaseService:
         return json_data
     
     def read_ticket_volunteerids(self, EventID):
-        query = """  Select T.TicketID, V.Name, T.Attendance from ticket T
+        query = """  Select T.TicketID, T.EventID, V.Name, T.Attendance from ticket T
                      left join volunteer V on T.VolunteerID = V.VolunteerID
                      where EventID = %s; """
    
@@ -146,3 +146,8 @@ class VolunteerDatabaseService:
                                                                        organization.email, organization.phone_number,
                                                                        organization.area_id, organization.street, O))
         return created_row_id
+    
+    def delete_ticket(self, ticket: Ticket):
+        query = "delete from ticket where TicketID = %s and EventID = %s"
+        json_data = self.db_connector.execute_delete_query(query, (ticket.TicketID, ticket.EventID))
+        return json_data

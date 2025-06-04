@@ -99,7 +99,7 @@ def read_Vendors_Area(OrgID: int,
     json_data = database_dependency.database_broker.read_organization(OrgID)
     return json_data
 
-@app.put("/EventInform/UpdateAttendance/", status_code=201)
+@app.put("/EventInform/UpdateAttendance/", status_code=204)
 def Update_TicketInform_Attendance(ticket: Ticket,
     database_dependency: 
         Annotated[DatabaseConnectionDependency, 
@@ -107,7 +107,7 @@ def Update_TicketInform_Attendance(ticket: Ticket,
     json_data = database_dependency.database_broker.modify_ticket_inform_attendance(ticket)
     return json_data
 
-@app.put("/UpdateOrganization", status_code=201)
+@app.put("/UpdateOrganization", status_code=204)
 def Update_Organization(organization: Organization,
     database_dependency: 
         Annotated[DatabaseConnectionDependency, 
@@ -115,7 +115,7 @@ def Update_Organization(organization: Organization,
     json_data = database_dependency.database_broker.modify_organization_for_orid(organization)
     return json_data
 
-@app.put("/UpdateEvents/", status_code=201)
+@app.put("/UpdateEvents/", status_code=204)
 def Update_Event(eventupdate: EventUpdate,
     database_dependency: 
         Annotated[DatabaseConnectionDependency, 
@@ -123,7 +123,7 @@ def Update_Event(eventupdate: EventUpdate,
     json_data = database_dependency.database_broker.modify_event_for_eventid(eventupdate)
     return json_data
 
-@app.post("/events/", )
+@app.post("/Addevents/", status_code=204)
 def create_event(
     event: Event,
     database_dependency:
@@ -142,7 +142,7 @@ def create_tickets(
     json_data = database_dependency.database_broker.create_ticket_for_eventid(ticket)
     return json_data
 
-@app.post("/organization/", )
+@app.post("/AddOrganization/", status_code=201)
 def create_organization(
     organization: Organization,
     database_dependency:
@@ -151,3 +151,13 @@ def create_organization(
     org_id = database_dependency.database_broker.add_new_organization(organization)
     #json_data = database_dependency.database_broker.read_event_for_eventid(event_id)
     return {"org_id":org_id}
+
+@app.delete("/Tickets_delete/", status_code=204)
+def delete_Tickets(
+    ticket: Ticket,
+    database_dependency:
+        Annotated[DatabaseConnectionDependency, 
+        Depends(DatabaseConnectionDependency)]):
+    ticket_id = database_dependency.database_broker.delete_ticket(ticket)
+    #json_data = database_dependency.database_broker.read_event_for_eventid(event_id)
+    return {"ticket":ticket_id}

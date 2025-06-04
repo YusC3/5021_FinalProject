@@ -89,6 +89,15 @@ def create_Event_TextInput(center_x: float, top: float, wide = 0.18):
     return_TextInput.disabled = True
     return return_TextInput
 
+class TicketDetail(BoxLayout):
+    def __init__(self, ticket_id, Event_id, **kwargs):
+        super().__init__(**kwargs)
+        self.ticketid = ticket_id
+        self.eventid = Event_id
+
+        self.checkbox = CheckBox(size_hint_y=None, height=30) 
+        self.add_widget(self.checkbox)
+
 class HomeScreen(Screen):
     def __init__(self, switch_func, **kwargs):
         super().__init__(**kwargs)
@@ -142,6 +151,9 @@ class HomeScreen(Screen):
         ticket_screen = self.manager.get_screen("Tickets")
         ticket_screen.spinner.text='choose items'
         ticket_screen.grid.clear_widgets()
+        ticket_screen.btn_add.disabled =True
+        ticket_screen.btn_delete.disabled =True
+        ticket_screen.btn_attended.disabled =True
 
         self.switch_func("Tickets") 
 
@@ -197,8 +209,17 @@ class TicketsScreen(Screen):
             size_hint=(0.06, 0.08),
             pos_hint={'right': 1, 'top': 0.75}
         )
-        #self.btn_delete.bind(on_press=lambda instance: YesOrNo_popup(self.TicketDelete, "delete"))
+        self.btn_delete.bind(on_press=lambda instance: YesOrNo_popup(self.TicketDelete, "delete"))
         self.btn_delete.disabled = True
+
+        #button attended
+        self.btn_attended = Button(
+            text='Attended',
+            size_hint=(0.08, 0.08),
+            pos_hint={'right': 1, 'top': 0.65}
+        )
+        self.btn_attended.bind(on_press=lambda instance: YesOrNo_popup(self.TicketAttended, "attended"))
+        self.btn_attended.disabled = True
 
         #excel
         header = GridLayout(cols=4, height=40, size_hint=(0.8, None), pos_hint={'center_x': 0.5, 'top': 0.85}, spacing=10)
@@ -216,20 +237,23 @@ class TicketsScreen(Screen):
         layout.add_widget(btn_back)
         layout.add_widget(self.btn_add)
         layout.add_widget(self.btn_delete)
+        layout.add_widget(self.btn_attended)
         layout.add_widget(header)  
         layout.add_widget(scroll)   
         self.add_widget(layout)    
 
     def add_rows(self, EventID: str):
         data =[]
+        self.SelectRoll = []
         response = requests.get("http://localhost:8000/EventInform/volunteersInEvents/" + EventID)
         if response.status_code == 200:
             data = response.json()
             self.grid.clear_widgets()
 
         for row in data:
-            checkbox = CheckBox(size_hint_y=None, height=30)
-            self.grid.add_widget(checkbox)
+            detail = TicketDetail(row['TicketID'], row['EventID'])
+            self.grid.add_widget(detail)
+            self.SelectRoll.append(detail)
 
             self.grid.add_widget(Label(text=str(row['TicketID']), size_hint_y=None, height=30, color=(0, 0, 1, 1)))
             self.grid.add_widget(Label(text=row['Name'], size_hint_y=None, height=30, color=(0, 0, 1, 1)))
@@ -240,6 +264,7 @@ class TicketsScreen(Screen):
         if self.spinner.text !='choose items':
             self.btn_add.disabled = False
             self.btn_delete.disabled = False
+            self.btn_attended.disabled = False
         self.add_rows(text)
     
     def TicketAdd(self, text):
@@ -248,10 +273,20 @@ class TicketsScreen(Screen):
         self.on_spinner_select(self.spinner, self.spinner.text)
 
     def TicketDelete(self, YesOrNo):
-        #if YesOrNo:
-            #ticket = TicketUpdateAttendance(TicketID = , EventID =)
-            #esponse = requests.put("http://localhost:8000/UpdateEvents/", data=ticket.json())
+        if YesOrNo:
+            selectTicket = [row for row in self.SelectRoll if row.checkbox.active]
+            for r in selectTicket:
+                ticket = Ticket(VolunteerID = 0, EventID = r.eventid, TicketID = r.ticketid)
+                response = requests.delete("http://localhost:8000/Tickets_delete/", data=ticket.json())
         self.on_spinner_select(self.spinner, self.spinner.text)
+
+    def TicketAttended(self, YesOrNo):
+        if YesOrNo:
+            selectTicket = [row for row in self.SelectRoll if row.checkbox.active]
+            for r in selectTicket:
+                ticket = Ticket(VolunteerID = 0, EventID = r.eventid, TicketID = r.ticketid)
+                response = requests.put("http://localhost:8000/EventInform/UpdateAttendance/", data=ticket.json())
+        self.on_spinner_select(self.spinner, self.spinner.text)  
 
 class EventsScreen(Screen):
     def __init__(self, switch_func, **kwargs):
