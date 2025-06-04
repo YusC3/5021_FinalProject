@@ -166,8 +166,9 @@ class TicketsScreen(Screen):
         btn_back.bind(on_press=lambda x: switch_func("home"))
 
         #scroll 
-        data =[]
+        eventlist = ()
         response = requests.get("http://localhost:8000//Organization/1/EventsList")
+
         if response.status_code == 200:
             data = response.json()
             eventlist = tuple(str(row['EventID']) for row in data)
@@ -273,7 +274,7 @@ class EventsScreen(Screen):
         btn_back.bind(on_press=lambda x: switch_func("home"))
 
         #scroll 
-        data =[]
+        eventlist = ()
         response = requests.get("http://localhost:8000//Organization/1/EventsList")
         if response.status_code == 200:
             data = response.json()
@@ -367,7 +368,6 @@ class EventsScreen(Screen):
 class VendorsScreen(Screen):
     def __init__(self, switch_func, **kwargs):
         super().__init__(**kwargs)
-
         #layout background
         layout = FloatLayout()
         with layout.canvas.before:
@@ -385,6 +385,7 @@ class VendorsScreen(Screen):
         btn_back.bind(on_press=lambda x: switch_func("home"))
 
         #scroll 
+        self.spinner_map = {}
         data =[]
         response = requests.get("http://localhost:8000/areas/")
         if response.status_code == 200:
