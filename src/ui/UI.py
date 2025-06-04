@@ -11,7 +11,7 @@ from kivy.uix.scrollview import ScrollView
 from kivy.uix.textinput import TextInput
 from kivy.uix.popup import Popup
 from kivy.uix.checkbox import CheckBox
-from data_models.ticket import Ticket, TicketUpdateAttendance
+from data_models.ticket import Ticket
 from data_models.event import Event, EventUpdate
 from data_models.organization import Organization
 
@@ -242,8 +242,8 @@ class TicketsScreen(Screen):
         self.add_rows(text)
     
     def TicketAdd(self, text):
-        ticket = Ticket(VolunteerID = text, EventID = self.spinner.text)
-        esponse = requests.post("http://localhost:8000/AddTickets/", data=ticket.json())
+        ticket = Ticket(VolunteerID = text, EventID = self.spinner.text, TicketID=0)
+        response = requests.post("http://localhost:8000/AddTickets/", data=ticket.json())
         self.on_spinner_select(self.spinner, self.spinner.text)
 
     def TicketDelete(self, YesOrNo):
@@ -363,7 +363,6 @@ class EventsScreen(Screen):
             esponse = requests.put("http://localhost:8000/UpdateEvents/", data=event.json())
         self.on_spinner_select(self.spinner, self.spinner.text)
         self.on_buttonclick_edit_update(B=True)
-
 
 class VendorsScreen(Screen):
     def __init__(self, switch_func, **kwargs):
@@ -542,7 +541,6 @@ class OrganizationScreen(Screen):
             self.input_AreaID.text = str(data["AreaID"])
             self.input_Street.text = data["Street"]
         self.on_buttonclick_edit_update(B=True)
-
 
 class MobileStyleApp(App):
     def build(self):

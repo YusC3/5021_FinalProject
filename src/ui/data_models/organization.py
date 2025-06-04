@@ -1,10 +1,10 @@
 from pydantic import BaseModel
 
-class OrganizationUpdate(BaseModel):
-    OrgID: int
-    Name: str 
-    NPOTypeID: int 
-    Email: str 
-    PhoneNumber: str 
-    AreaID: int 
-    Street: str
+class Organization(BaseModel):
+    org_id: int
+    name: str
+    npotype_id: int
+    email: str
+    phone_number: str
+    area_id: int
+    street: str
