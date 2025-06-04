@@ -10,7 +10,7 @@ from utils.json_utils import load_json
 from db_connector import DBConnector
 from volunteer_db_service import VolunteerDatabaseService
 from data_models.event import Event, EventUpdate
-from data_models.ticket import Ticket, TicketUpdateAttendance
+from data_models.ticket import Ticket
 from data_models.organization import Organization
 
 
@@ -100,11 +100,11 @@ def read_Vendors_Area(OrgID: int,
     return json_data
 
 @app.put("/EventInform/UpdateAttendance/", status_code=201)
-def Update_TicketInform_Attendance(ticketupdate: TicketUpdateAttendance,
+def Update_TicketInform_Attendance(ticket: Ticket,
     database_dependency: 
         Annotated[DatabaseConnectionDependency, 
         Depends(DatabaseConnectionDependency)]):
-    json_data = database_dependency.database_broker.modify_ticket_inform_attendance(ticketupdate)
+    json_data = database_dependency.database_broker.modify_ticket_inform_attendance(ticket)
     return json_data
 
 @app.put("/UpdateOrganization", status_code=201)
@@ -139,7 +139,7 @@ def create_tickets(
     database_dependency: 
         Annotated[DatabaseConnectionDependency, 
         Depends(DatabaseConnectionDependency)]):
-    json_data = database_dependency.database_broker.create_ticket_for_eventid("1", "1")
+    json_data = database_dependency.database_broker.create_ticket_for_eventid(ticket)
     return json_data
 
 @app.post("/organization/", )

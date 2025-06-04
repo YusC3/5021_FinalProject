@@ -1,5 +1,5 @@
 from data_models.event import Event, EventUpdate
-from data_models.ticket import Ticket, TicketUpdateAttendance
+from data_models.ticket import Ticket
 from data_models.organization import Organization
 from db_connector import DBConnector
 
@@ -82,11 +82,11 @@ class VolunteerDatabaseService:
         json_data = self.db_connector.execute_select_query(query, [OrgID], fetchall=False)
         return json_data
 
-    def modify_ticket_inform_attendance(self, ticketupdate: TicketUpdateAttendance):
+    def modify_ticket_inform_attendance(self, ticket: Ticket):
         query = """ update ticket 
                     set Attendance = 1 
                     where TicketID = %s and EventID = %s; """
-        json_data = self.db_connector.execute_updated_query(query, (ticketupdate.TicketID, ticketupdate.EventID))
+        json_data = self.db_connector.execute_updated_query(query, (ticket.TicketID, ticket.EventID))
         return json_data
     
     def modify_organization_for_orid(self, organization: Organization):       
@@ -136,7 +136,7 @@ class VolunteerDatabaseService:
         query = """ insert into ticket (VolunteerID, EventID, Attendance)
                     values (%s, %s, false); """
  
-        json_data = self.db_connector.execute_insert_query(query, (VolunteerID, EventID,))
+        json_data = self.db_connector.execute_insert_query(query, (ticket.VolunteerID, ticket.EventID))
         return json_data
     
     def add_new_organization(self, organization:Organization):
