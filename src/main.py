@@ -29,10 +29,6 @@ class DatabaseConnectionDependency:
         db_connector = DBConnector(connection)
         self.database_broker = VolunteerDatabaseService(db_connector)
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
-
 @app.get("/vendors/")
 def read_vendors(
     database_dependency: 
@@ -76,7 +72,7 @@ def read_TicketInform_volunteers(EventID: int,
     return json_data
 
 @app.get("/Event={EventID}")
-def read_Vendors_Area(EventID: int,
+def read_event_for_event_id(EventID: int,
     database_dependency: 
         Annotated[DatabaseConnectionDependency, 
         Depends(DatabaseConnectionDependency)]):
@@ -92,7 +88,7 @@ def read_Vendors_Area(AreaID: int,
     return json_data
 
 @app.get("/organization/orgid={OrgID}")
-def read_Vendors_Area(OrgID: int,
+def read_organization_for_org_id(OrgID: int,
     database_dependency: 
         Annotated[DatabaseConnectionDependency, 
         Depends(DatabaseConnectionDependency)]):
